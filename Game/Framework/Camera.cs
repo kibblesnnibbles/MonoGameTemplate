@@ -10,13 +10,15 @@ public class Camera
     // Construct a new Camera class with standard zoom (no scaling)
     public Camera()
     {
-        Zoom = 1.0f;
+        Zoom = 0.5f;
     }
 
     // Centered Position of the Camera in pixels.
     public Vector2 Position { get; private set; }
     // Current Zoom level with 1.0f being standard
     public float Zoom { get; private set; }
+    private float ZoomMin = 0.25f;
+    private float ZoomMax = 10.0f;
     // Current Rotation amount with 0.0f being standard orientation
     public float Rotation { get; private set; }
 
@@ -57,10 +59,28 @@ public class Camera
     // 1.0f - 0.5f = 0.5f so everything would be drawn at half size.
     public void AdjustZoom(float amount)
     {
-        Zoom += amount;
-        if (Zoom < 0.25f)
+        float zoomAmount = 0f;
+        if (amount > 0)
         {
-            Zoom = 0.25f;
+            zoomAmount = (ZoomMax - Zoom) / 4;
+        }
+        else
+        {
+            zoomAmount = (Zoom - ZoomMin) / -4;
+        }
+        if (zoomAmount > 0.1f)
+            zoomAmount = 0.1f;
+        if (zoomAmount < -0.1f)
+            zoomAmount = -0.1f;
+
+        Zoom += zoomAmount;
+        if (Zoom < ZoomMin)
+        {
+            Zoom = ZoomMin;
+        }
+        if (Zoom > ZoomMax)
+        {
+            Zoom = ZoomMax;
         }
     }
 
@@ -123,14 +143,14 @@ public class Camera
     // Clamp the camera so it never leaves the visible area of the map.
     private Vector2 MapClampedPosition(Vector2 position)
     {
-        var cameraMax = new Vector2(Global.WORLD_SIZE -
-            (ViewportWidth / Zoom / 2),
-            Global.WORLD_SIZE -
-            (ViewportHeight / Zoom / 2));
+        var cameraMax = new Vector2(
+            Global.WORLD_SIZE - (ViewportWidth / Zoom / 2) + 100,
+            Global.WORLD_SIZE - (ViewportHeight / Zoom / 2) + 100
+        );
 
-        return Vector2.Clamp(position,
-           new Vector2(ViewportWidth / Zoom / 2, ViewportHeight / Zoom / 2),
-           cameraMax);
+        Vector2 clamped = new Vector2();
+        clamped = Vector2.Clamp(position, new Vector2((ViewportWidth / Zoom / 2) - 100, (ViewportHeight / Zoom / 2) - 100), cameraMax);
+        return clamped;
     }
 
     public Vector2 WorldToScreen(Vector2 worldPosition)
@@ -149,22 +169,23 @@ public class Camera
        PlayerIndex? controllingPlayer)
     {
         Vector2 cameraMovement = Vector2.Zero;
+        float cameraMovementAmount = 0.1f / Zoom; //Adjust Movement based on Zoom
 
         if (inputState.IsScrollLeft(controllingPlayer))
         {
-            cameraMovement.X = -1;
+            cameraMovement.X = cameraMovementAmount * -1;
         }
         else if (inputState.IsScrollRight(controllingPlayer))
         {
-            cameraMovement.X = 1;
+            cameraMovement.X = cameraMovementAmount;
         }
         if (inputState.IsScrollUp(controllingPlayer))
         {
-            cameraMovement.Y = -1;
+            cameraMovement.Y = cameraMovementAmount * -1;
         }
         else if (inputState.IsScrollDown(controllingPlayer))
         {
-            cameraMovement.Y = 1;
+            cameraMovement.Y = cameraMovementAmount;
         }
         if (inputState.IsZoomIn(controllingPlayer))
         {

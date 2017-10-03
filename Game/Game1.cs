@@ -16,7 +16,10 @@ namespace EvolutionConquest
         private Player _player;
         private SpriteFont _diagFont;
         //Game variables
-        private Texture2D _blackPixel;
+        private Texture2D _whitePixel;
+        private int _frames;
+        private double _elapsedSeconds;
+        private int _fps;
 
         public Game1()
         {
@@ -24,6 +27,8 @@ namespace EvolutionConquest
             Content.RootDirectory = "Content";
             _inputState = new InputState();
             _player = new Player();
+            _frames = 0;
+            _elapsedSeconds = 0;
         }
 
         /// <summary>
@@ -50,11 +55,14 @@ namespace EvolutionConquest
             // Create a new SpriteBatch, which can be used to draw textures.
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            //Load the Font from the Content object. Use the Content Pipeline under the  "Content" folder to add assets to game
             _diagFont = Content.Load<SpriteFont>("DiagnosticsFont");
-            _blackPixel = new Texture2D(_graphics.GraphicsDevice, 1, 1);
+
+            //Load in a simple white pixel
+            _whitePixel = new Texture2D(_graphics.GraphicsDevice, 1, 1);
             Color[] color = new Color[1];
-            color[0] = Color.Black;
-            _blackPixel.SetData(color);
+            color[0] = Color.White;
+            _whitePixel.SetData(color);
         }
 
         /// <summary>
@@ -79,11 +87,20 @@ namespace EvolutionConquest
             }
             else
             {
+                _inputState.Update();
                 _player.HandleInput(_inputState);
+                Global.Camera.HandleInput(_inputState, PlayerIndex.One);
             }
 
-            _inputState.Update();
-            Global.Camera.HandleInput(_inputState, PlayerIndex.One);
+            //Update Logic goes here
+            if (_elapsedSeconds >= 1)
+            {
+                _fps = _frames;
+                _frames = 0;
+                _elapsedSeconds = 0;
+            }
+            _frames++;
+            _elapsedSeconds += gameTime.ElapsedGameTime.TotalSeconds;
 
             base.Update(gameTime);
         }
@@ -96,9 +113,17 @@ namespace EvolutionConquest
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+            //DRAW IN THE WORLD
             _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, Global.Camera.TranslationMatrix);
-            _spriteBatch.Draw(_blackPixel, new Rectangle(Global.Camera.ViewportWidth / 2, Global.Camera.ViewportHeight / 2, 10, 10), Color.Black);
-            _spriteBatch.Draw(_blackPixel, new Rectangle(-100, 100, 10, 10), Color.Black);
+            //Sample Draws to test Panning/Zooming. Notice that choosing a color on the Draw Results in the pixel color changing. This works because putting a tint onto white results in that color 
+            _spriteBatch.Draw(_whitePixel, new Rectangle(Global.Camera.ViewportWidth / 2, Global.Camera.ViewportHeight / 2, 10, 10), Color.Black);
+            _spriteBatch.Draw(_whitePixel, new Rectangle(-100, 100, 10, 10), Color.Red);
+            _spriteBatch.End();
+
+            //DRAW HUD INFOMATION
+            _spriteBatch.Begin();
+            //FPS Counter in top left corner
+            _spriteBatch.DrawString(_diagFont, "FPS: " + _fps, new Vector2(10, 10), Color.Black);
             _spriteBatch.End();
 
             base.Draw(gameTime);
