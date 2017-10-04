@@ -93,14 +93,6 @@ namespace EvolutionConquest
             }
 
             //Update Logic goes here
-            if (_elapsedSeconds >= 1)
-            {
-                _fps = _frames;
-                _frames = 0;
-                _elapsedSeconds = 0;
-            }
-            _frames++;
-            _elapsedSeconds += gameTime.ElapsedGameTime.TotalSeconds;
 
             base.Update(gameTime);
         }
@@ -111,6 +103,16 @@ namespace EvolutionConquest
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            //FPS Logic
+            if (_elapsedSeconds >= 1)
+            {
+                _fps = _frames;
+                _frames = 0;
+                _elapsedSeconds = 0;
+            }
+            _frames++;
+            _elapsedSeconds += gameTime.ElapsedGameTime.TotalSeconds;
+
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             //DRAW IN THE WORLD
