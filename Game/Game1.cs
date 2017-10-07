@@ -4,9 +4,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace EvolutionConquest
 {
-    /// <summary>
-    /// This is the main type for your game.
-    /// </summary>
+
     public class Game1 : Game
     {
         //Framework variables
